@@ -1,0 +1,39 @@
+# Machine-readable source of truth for AGENTS.md §3 prerequisites.
+# check_prereqs.py verifies every entry; SOURCES.md is the human-facing record.
+# Dataset files are filled in as P1 downloads them (path relative to
+# $SCRATCH/data/<name>/, sha256 of the archive as downloaded).
+
+datasets:
+  - name: 2wikimultihopqa
+    files: []
+  - name: metaqa
+    files: []
+  - name: hotpotqa
+    files: []
+  - name: musique
+    files: []
+  - name: webqsp
+    files: []
+  - name: cwq
+    files: []
+
+models:
+  - name: Qwen2.5-14B-Instruct
+    hf_id: Qwen/Qwen2.5-14B-Instruct
+    gated: false
+  - name: Qwen2.5-7B-Instruct
+    hf_id: Qwen/Qwen2.5-7B-Instruct
+    gated: false
+  - name: Llama-3.1-8B-Instruct
+    hf_id: meta-llama/Llama-3.1-8B-Instruct
+    gated: true # [HUMAN-REQUIRED] license acceptance + HF token
+  - name: deberta-v3-large-mnli
+    hf_id: MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli
+    gated: false
+
+freebase_endpoint: null # [HUMAN-REQUIRED] Virtuoso SPARQL URL (§3.3)
+
+baseline_repos:
+  - name: RoG
+  - name: SubgraphRAG
+  - name: graphrag

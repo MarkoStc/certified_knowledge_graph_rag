@@ -42,3 +42,9 @@ select = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# prereqs checks depend on $SCRATCH state and external services; run them
+# explicitly with `pytest -m prereqs` (see tests/test_prereqs.py).
+addopts = "-m 'not prereqs'"
+markers = [
+    "prereqs: full AGENTS.md §3 prerequisite verification (deselected by default)",
+]
