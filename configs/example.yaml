@@ -1,0 +1,7 @@
+# Template every experiment config follows (loaded via mcgr.config.load_config).
+# One YAML per experiment; no parameters hardcoded in scripts (AGENTS.md §1).
+name: example
+seed: 0
+dataset: 2wiki
+params:
+  hops: 2
