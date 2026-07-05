@@ -23,3 +23,26 @@ Format per entry: date, phase, what was attempted, result, next.
 - Blocked items known in advance ([HUMAN-REQUIRED], §3): HF token, Llama-3.1
   license, Freebase endpoint. Proceeding on everything else; escalation to
   Marko queued.
+- P0 code complete: config loader / seeding / RunLogger (tested),
+  `check_prereqs.py` verifying every §3 item against `context/manifest.yaml`,
+  wired as pytest (marker `prereqs`, deselected by default). 14 unit tests
+  green, ruff clean.
+
+## 2026-07-06 — P1 — data & model acquisition
+
+- Downloaded to `$SCRATCH/data/` with SHA256s recorded in
+  `context/manifest.yaml` (details in `context/SOURCES.md`):
+  2WikiMultiHopQA (`data_ids_april7.zip`, evidence-annotated version),
+  MetaQA (HF mirror; official GDrive is gdown-inaccessible — content
+  verified), HotpotQA (HF parquet; curtis.ml.cmu.edu was down), MuSiQue
+  v1.0 (official GDrive), WebQSP (Microsoft, current URL — old one 404s),
+  CWQ v1.1 (official Dropbox).
+- Downloaded to `$SCRATCH/models/`: Qwen2.5-14B-Instruct (28G),
+  Qwen2.5-7B-Instruct (15G), DeBERTa-v3-large-MNLI (3.9G). Llama-3.1-8B
+  blocked on license+token.
+- Cloned baselines to `third_party/` (commits in SOURCES.md): RoG,
+  SubgraphRAG, Microsoft GraphRAG.
+- `check_prereqs`: **13/16 satisfied; the 3 misses are exactly the
+  [HUMAN-REQUIRED] items** (HF token, Llama license, Freebase endpoint).
+- Next: unpack archives, dataset loaders with uniform schema + hand-checked
+  tests, `results/data_stats.md`.
