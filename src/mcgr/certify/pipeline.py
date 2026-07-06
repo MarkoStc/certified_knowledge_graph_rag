@@ -11,6 +11,7 @@ Only KG-native datasets whose graph needs no Freebase are wired here so far
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from multiprocessing import Pool
 
 import networkx as nx
 
@@ -43,19 +44,52 @@ def _resolve_kg(name: str) -> tuple[nx.Graph, int]:
     raise NotImplementedError(f"no Freebase-free KG provider for {name!r} yet (P2 builds the rest)")
 
 
-def certify_dataset(name: str, split: str, limit: int | None = None) -> Iterator[CertifiedQuery]:
-    graph, radius = _resolve_kg(name)
+def _certify_one(graph: nx.Graph, radius: int, qid, anchors, answers) -> CertifiedQuery:
+    sub = khop_subgraph(graph, anchors, radius)
+    ks = [query_certificate(sub, anchors, a) for a in answers if a in sub]
+    supported = [k for k in ks if k >= 0]
+    return CertifiedQuery(
+        qid=qid,
+        k=max(ks) if ks else -1,
+        n_anchors=len(anchors),
+        n_answers_supported=len(supported),
+        subgraph_edges=sub.number_of_edges(),
+    )
+
+
+# worker globals: the full KB graph is built once per process, never pickled
+_W_GRAPH: nx.Graph | None = None
+_W_RADIUS: int = 0
+
+
+def _worker_init(name: str) -> None:
+    global _W_GRAPH, _W_RADIUS
+    _W_GRAPH, _W_RADIUS = _resolve_kg(name)
+
+
+def _worker_task(item: tuple[str, list[str], list[str]]) -> CertifiedQuery:
+    assert _W_GRAPH is not None
+    qid, anchors, answers = item
+    return _certify_one(_W_GRAPH, _W_RADIUS, qid, anchors, answers)
+
+
+def _iter_query_items(name: str, split: str, limit: int | None):
     for i, r in enumerate(load_dataset(name, split)):
         if limit is not None and i >= limit:
             return
-        anchors = list(r.anchor_entities)
-        sub = khop_subgraph(graph, anchors, radius)
-        ks = [query_certificate(sub, anchors, a) for a in r.answers if a in sub]
-        supported = [k for k in ks if k >= 0]
-        yield CertifiedQuery(
-            qid=r.qid,
-            k=max(ks) if ks else -1,
-            n_anchors=len(anchors),
-            n_answers_supported=len(supported),
-            subgraph_edges=sub.number_of_edges(),
-        )
+        yield (r.qid, list(r.anchor_entities), list(r.answers))
+
+
+def certify_dataset(
+    name: str, split: str, limit: int | None = None, workers: int = 1
+) -> Iterator[CertifiedQuery]:
+    """Certificate per query. ``workers > 1`` fans out across processes,
+    each building the KB graph once (the graph is never pickled)."""
+    items = _iter_query_items(name, split, limit)
+    if workers <= 1:
+        graph, radius = _resolve_kg(name)
+        for qid, anchors, answers in items:
+            yield _certify_one(graph, radius, qid, anchors, answers)
+        return
+    with Pool(processes=workers, initializer=_worker_init, initargs=(name,)) as pool:
+        yield from pool.imap_unordered(_worker_task, items, chunksize=16)

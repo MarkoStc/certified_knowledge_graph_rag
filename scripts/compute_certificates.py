@@ -28,6 +28,7 @@ def main() -> int:
     ap.add_argument("--dataset", required=True, help="e.g. metaqa-1hop / metaqa-2hop / metaqa-3hop")
     ap.add_argument("--split", required=True)
     ap.add_argument("--limit", type=int, default=None, help="cap #queries (for smoke runs)")
+    ap.add_argument("--workers", type=int, default=1, help="parallel processes (CPU-bound)")
     ap.add_argument("--out-dir", required=True, type=Path)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
@@ -36,7 +37,7 @@ def main() -> int:
     runlog = RunLogger(args.out_dir)
     kdist: Counter[int] = Counter()
     n = 0
-    for cq in certify_dataset(args.dataset, args.split, limit=args.limit):
+    for cq in certify_dataset(args.dataset, args.split, limit=args.limit, workers=args.workers):
         runlog.log(
             {
                 "qid": cq.qid,
