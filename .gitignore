@@ -16,12 +16,13 @@ build/
 .env
 .env.*
 
-# Large artifacts — live on $SCRATCH, never in the repo (AGENTS.md §2)
-data/
-models/
-logs/
-wandb/
-runs/
+# Large artifacts — live on $SCRATCH, never in the repo (AGENTS.md §2).
+# Root-anchored so they don't shadow source dirs like src/mcgr/data/.
+/data/
+/models/
+/logs/
+/wandb/
+/runs/
 
 # Baseline repos cloned for comparison (AGENTS.md §3.6)
 third_party/

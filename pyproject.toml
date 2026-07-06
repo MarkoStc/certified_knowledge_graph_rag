@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "networkx>=3.4",
+    "pyarrow>=24.0.0",
     "pyyaml>=6.0.3",
 ]
 
@@ -42,9 +43,10 @@ select = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# prereqs checks depend on $SCRATCH state and external services; run them
-# explicitly with `pytest -m prereqs` (see tests/test_prereqs.py).
-addopts = "-m 'not prereqs'"
+# prereqs/data tests depend on $SCRATCH state and external services; run
+# them explicitly (e.g. `pytest -m data`). Default run is hermetic.
+addopts = "-m 'not prereqs and not data'"
 markers = [
     "prereqs: full AGENTS.md §3 prerequisite verification (deselected by default)",
+    "data: loader tests that read datasets from $SCRATCH (deselected by default)",
 ]
