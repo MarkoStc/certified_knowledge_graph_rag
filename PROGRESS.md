@@ -102,3 +102,27 @@ Format per entry: date, phase, what was attempted, result, next.
 - Next unblocked critical-path step: 2WikiMultiHopQA KG (P2) using its native
   gold triples + Wikidata/context neighborhood, then certify it. After that,
   P6 attacks + P7 correlation (certified vs empirical robustness).
+
+## 2026-07-07 — P2/P4 — 2WikiMultiHopQA certified (Wikidata-grounded)
+
+- Confirmed with Marko that the [HUMAN-REQUIRED] items don't block the
+  critical path; proceeded to 2Wiki.
+- Built a Wikidata fetcher (`kg/wikidata.py`, batched/cached/rate-safe) and
+  fetched all entity-valued claims for the 60,487 entities in 2Wiki
+  compositional/inference gold chains → **1,296,716 triples** cached to
+  `$SCRATCH/data/2wiki_kg` (snapshot 2026-07-07, `context/SOURCES.md`).
+  Raw graph 366,039 nodes / 1,218,282 edges.
+- Hub pruning (evidential-independence control) + role-aware endpoint
+  reconnection: block transit through type/attribute hubs (human, male, a
+  country) but keep them when they are a query's own answer. This fixed a
+  real bug where 25% of questions (common-entity answers) were wrongly
+  unsupported — supported 72% → 96%.
+- **2Wiki certificate result** (dev 6,107 / train 49,772 compositional+
+  inference queries, added to results/certificate_distribution.md):
+    dev:   frac(k≥1)=0.675  supported=0.964  mean k=4.01
+    train: frac(k≥1)=0.639  supported=0.957  mean k=4.10
+  Tight train/dev agreement. Strong H1 support on a second, real,
+  Wikidata-grounded dataset (not just MetaQA's synthetic KB).
+- Next: P6 attacks (RAG-Safety triple insertion first) + P7 gate — correlate
+  certified k with empirical robustness under attack. Also 2Wiki test lacks
+  answer_id so isn't certifiable; train is cached for P8 retriever work.

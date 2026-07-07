@@ -19,6 +19,7 @@ choices in `DECISIONS.md`.
 | MetaQA 2-hop | test | 14,872 | 0.314 | 1.000 | 0.72 |
 | MetaQA 3-hop | dev | 14,274 | 0.969 | 1.000 | 6.32 |
 | MetaQA 3-hop | test | 14,274 | 0.967 | 1.000 | 6.41 |
+| 2WikiMultiHopQA | dev | 6,107 | 0.675 | 0.964 | 4.01 |
 
 ## k histograms
 
@@ -28,6 +29,7 @@ choices in `DECISIONS.md`.
 - **MetaQA 2-hop / test**: {0:10203, 1:2108, 2:1190, 3:675, 4:308, 5:132, 6:70, 7:67, 8:22, 9:15, …}
 - **MetaQA 3-hop / dev**: {0:443, 1:785, 2:1216, 3:1568, 4:1676, 5:1641, 6:1443, 7:1114, 8:1020, 9:789, …}
 - **MetaQA 3-hop / test**: {0:471, 1:788, 2:1203, 3:1549, 4:1615, 5:1646, 6:1483, 7:1149, 8:1036, 9:743, …}
+- **2WikiMultiHopQA / dev**: {-1:218, 0:1764, 1:887, 2:557, 3:456, 4:362, 5:314, 6:263, 7:196, 8:172, …}
 
 ## The finding (H1)
 
@@ -41,6 +43,18 @@ is stable across dev/test:
 This monotonic hop-count → path-redundancy relationship, on full splits
 (~10k-15k queries each) with tight dev/test agreement, is the core P7
 signal and the empirical basis of the §12 hop-count vs path-count ablation.
+
+## 2WikiMultiHopQA (Wikidata-grounded)
+
+On the compositional/inference subset (6,107 dev queries with Wikidata ids), certified over the pruned Wikidata KG built from the gold-chain entities' claims:
+
+- **frac k≥1 = 67.5%**, frac supported = 96.4%, mean k (supported) = 4.01.
+
+The 2Wiki gold chains are length-2 bridges; redundancy here comes from
+*additional* Wikidata facts linking the same anchor and answer, after
+type/attribute hubs are pruned (evidential-independence control). A low
+frac k≥1 would be the P7 PIVOT signal (the certificate-maximizing
+retriever, P8, becomes the headline); a high one supports H1 directly.
 
 ## Scope & caveats (AGENTS.md §1)
 

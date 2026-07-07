@@ -40,3 +40,19 @@
   capacity edges** to each anchor, so the min cut falls only on real facts =
   min facts to disconnect the answer from the whole anchor set. Reduces to the
   single-pair count for one anchor.
+- **2026-07-07 — 2Wiki KG = Wikidata claims of gold-chain entities, on
+  Q-ids.** Built from `evidences_id`/`answer_id` (compositional + inference
+  only — comparison/bridge_comparison are attribute comparisons, not
+  anchor→answer paths, and lack Q-ids). Fetched all entity-valued claims of
+  the 60,487 chain entities (not just the gold fact) so alternative paths can
+  exist. Only seed entities' claims are fetched → conservative (misses paths
+  through unfetched intermediates). Snapshot pinned by the cache
+  (`context/SOURCES.md`).
+- **2026-07-07 — Hub pruning enforces evidential independence, but is
+  role-aware.** Nodes with degree > 200 (type/attribute values: human, male,
+  a country) are removed so paths can't *transit* them (a shared type is not
+  independent evidence). But a hub that is a query's own anchor/answer is
+  restored as an endpoint (`reconnect_endpoints`), linked only to nodes the
+  local subgraph already reached — otherwise 25% of 2Wiki questions (whose
+  answer is a common entity) were wrongly unsupported. Degree threshold 200 is
+  a tunable; revisit in the P5 structural-vs-evidential analysis.
