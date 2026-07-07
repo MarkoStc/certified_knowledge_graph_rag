@@ -18,7 +18,7 @@ import networkx as nx
 
 from mcgr.certify.menger import query_certificate
 from mcgr.data import load_dataset
-from mcgr.kg.graph_store import khop_subgraph
+from mcgr.kg.graph_store import khop_subgraph, reconnect_endpoints
 
 # 2Wiki gold chains are length 2; radius 2 captures same-length alternative
 # paths (the conservative, gold-comparable horizon).
@@ -34,21 +34,31 @@ class CertifiedQuery:
     subgraph_edges: int
 
 
-def _resolve_kg(name: str) -> tuple[nx.Graph, int]:
+def _resolve_kg(name: str) -> tuple[nx.Graph, int, dict[str, set[str]]]:
+    """Return (transit graph, radius, hub adjacency). ``hub_adj`` is empty
+    for KGs without hub pruning (MetaQA); for 2Wiki it lets a pruned hub be
+    restored as this query's endpoint."""
     if name.startswith("metaqa-"):
         from mcgr.kg.metaqa_kg import metaqa_graph
 
         hops = int(name.removeprefix("metaqa-").removesuffix("hop"))
-        return metaqa_graph(), hops
+        return metaqa_graph(), hops, {}
     if name == "2wikimultihopqa":
-        from mcgr.kg.twowiki_kg import twowiki_graph
+        from mcgr.kg.twowiki_kg import twowiki_graph_and_hubs
 
-        return twowiki_graph(), _TWOWIKI_RADIUS
+        graph, hub_adj = twowiki_graph_and_hubs()
+        return graph, _TWOWIKI_RADIUS, hub_adj
     raise NotImplementedError(f"no Freebase-free KG provider for {name!r} yet (P2 builds the rest)")
 
 
-def _certify_one(graph: nx.Graph, radius: int, qid, anchors, answers) -> CertifiedQuery:
+def _certify_one(
+    graph: nx.Graph, radius: int, hub_adj: dict[str, set[str]], qid, anchors, answers
+) -> CertifiedQuery:
     sub = khop_subgraph(graph, anchors, radius)
+    if hub_adj:
+        # restore any anchor/answer that was pruned as a transit hub, so it
+        # can serve as a legitimate endpoint of this query
+        reconnect_endpoints(sub, hub_adj, [*anchors, *answers])
     ks = [query_certificate(sub, anchors, a) for a in answers if a in sub]
     supported = [k for k in ks if k >= 0]
     return CertifiedQuery(
@@ -63,17 +73,18 @@ def _certify_one(graph: nx.Graph, radius: int, qid, anchors, answers) -> Certifi
 # worker globals: the full KB graph is built once per process, never pickled
 _W_GRAPH: nx.Graph | None = None
 _W_RADIUS: int = 0
+_W_HUB_ADJ: dict[str, set[str]] = {}
 
 
 def _worker_init(name: str) -> None:
-    global _W_GRAPH, _W_RADIUS
-    _W_GRAPH, _W_RADIUS = _resolve_kg(name)
+    global _W_GRAPH, _W_RADIUS, _W_HUB_ADJ
+    _W_GRAPH, _W_RADIUS, _W_HUB_ADJ = _resolve_kg(name)
 
 
 def _worker_task(item: tuple[str, list[str], list[str]]) -> CertifiedQuery:
     assert _W_GRAPH is not None
     qid, anchors, answers = item
-    return _certify_one(_W_GRAPH, _W_RADIUS, qid, anchors, answers)
+    return _certify_one(_W_GRAPH, _W_RADIUS, _W_HUB_ADJ, qid, anchors, answers)
 
 
 def _iter_query_items(name: str, split: str, limit: int | None):
@@ -102,9 +113,9 @@ def certify_dataset(
     each building the KB graph once (the graph is never pickled)."""
     items = _iter_query_items(name, split, limit)
     if workers <= 1:
-        graph, radius = _resolve_kg(name)
+        graph, radius, hub_adj = _resolve_kg(name)
         for qid, anchors, answers in items:
-            yield _certify_one(graph, radius, qid, anchors, answers)
+            yield _certify_one(graph, radius, hub_adj, qid, anchors, answers)
         return
     with Pool(processes=workers, initializer=_worker_init, initargs=(name,)) as pool:
         yield from pool.imap_unordered(_worker_task, items, chunksize=16)

@@ -73,9 +73,14 @@ def load_triples() -> list[tuple[str, str, str]]:
 
 
 @cache
-def twowiki_graph(max_degree: int = HUB_MAX_DEGREE) -> nx.Graph:
-    """The cached 2Wiki Wikidata KG as one undirected fact graph, with
-    type/attribute hubs pruned (evidential-independence control)."""
+def twowiki_graph_and_hubs(max_degree: int = HUB_MAX_DEGREE) -> tuple[nx.Graph, dict]:
+    """The cached 2Wiki Wikidata KG (hubs pruned for transit) plus the
+    ``{hub: neighbors}`` adjacency needed to restore a hub as a query
+    endpoint. See graph_store.prune_hubs / reconnect_endpoints."""
     graph = build_graph(load_triples())
-    pruned, _ = prune_hubs(graph, max_degree)
-    return pruned
+    return prune_hubs(graph, max_degree)
+
+
+def twowiki_graph(max_degree: int = HUB_MAX_DEGREE) -> nx.Graph:
+    """The pruned 2Wiki Wikidata KG (transit graph)."""
+    return twowiki_graph_and_hubs(max_degree)[0]

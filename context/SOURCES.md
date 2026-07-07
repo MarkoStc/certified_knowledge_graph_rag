@@ -39,6 +39,18 @@ Freebase-Setup style dump — **[HUMAN-REQUIRED]** to confirm (AGENTS.md §3.3).
 
 Attack implementations (RAG-Safety, GragPoison, KEPo): located in P6.
 
+## Wikidata KG snapshot for 2WikiMultiHopQA (P2)
+
+- Fetched **2026-07-07** via the public `wbgetentities` API (props=claims,
+  maxlag=5), for all 60,487 entities appearing in the compositional/inference
+  gold chains (`evidences_id`) plus answers of train+dev.
+- Raw per-batch responses cached under `$SCRATCH/data/wikidata_cache/`;
+  extracted entity-valued triples in `$SCRATCH/data/2wiki_kg/triples.tsv`
+  (**1,296,716 triples**; graph 366,039 nodes / 1,218,282 edges before hub
+  pruning). Rebuild: `scripts/build_2wiki_kg.py` (idempotent — reuses cache).
+- Wikidata is public, CC0; no token needed. Snapshot is dated because
+  Wikidata is live — the cache is the reproducible pin.
+
 ## Papers
 
 `context/papers/` — populated as sources are read and cited (AGENTS.md §11).

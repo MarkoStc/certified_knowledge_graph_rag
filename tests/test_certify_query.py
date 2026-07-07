@@ -3,7 +3,7 @@
 import networkx as nx
 
 from mcgr.certify import anchor_set_path_count, query_certificate
-from mcgr.kg.graph_store import build_graph, khop_subgraph, prune_hubs
+from mcgr.kg.graph_store import build_graph, khop_subgraph, prune_hubs, reconnect_endpoints
 
 
 def test_single_anchor_matches_pair_count() -> None:
@@ -60,6 +60,23 @@ def test_prune_hubs_removes_shared_type_paths() -> None:
     edges += [(n, "instance_of", "H") for n in ("a", "b", "d", "e", "c")]
     g = build_graph(edges)
     assert anchor_set_path_count(g, ["a"], "c") == 2  # true edge + a-H-c
-    pruned, removed = prune_hubs(g, max_degree=3)
-    assert "H" in removed
+    pruned, hub_adj = prune_hubs(g, max_degree=3)
+    assert "H" in hub_adj
     assert anchor_set_path_count(pruned, ["a"], "c") == 1  # only the real fact
+
+
+def test_reconnect_endpoints_restores_hub_answer() -> None:
+    # Answer B is a high-degree hub linking many entities; a reaches B both
+    # directly and via m. Pruning drops B (transit hub), but as THIS query's
+    # answer it must be restored — without reopening transit through it.
+    edges = [("a", "r", "B"), ("a", "r", "m"), ("m", "r", "B")]
+    edges += [(n, "r", "B") for n in ("c", "d", "e", "f")]  # makes B a hub
+    g = build_graph(edges)
+    pruned, hub_adj = prune_hubs(g, max_degree=3)
+    assert "B" in hub_adj and "B" not in pruned  # B pruned as a transit hub
+
+    sub = khop_subgraph(pruned, ["a"], radius=2)
+    assert "B" not in sub  # unsupported before reconnection
+    reconnect_endpoints(sub, hub_adj, ["a", "B"])
+    # a->B direct and a->m->B are two edge-disjoint paths -> k = 1
+    assert anchor_set_path_count(sub, ["a"], "B") == 2
