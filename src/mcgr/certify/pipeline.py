@@ -5,8 +5,9 @@ k(q) = max over gold answers of query_certificate(subgraph, anchors, answer).
 Taking the max reflects "the answer the system would defend"; per-answer
 detail is kept in the emitted record.
 
-Only KG-native datasets whose graph needs no Freebase are wired here so far
-(MetaQA). Others register their KG provider as P2 builds them.
+Datasets whose graph needs no Freebase are wired here: MetaQA (names as
+nodes) and 2WikiMultiHopQA (Wikidata Q-ids as nodes). Each provides a KG,
+a radius, and a stream of (qid, anchor-nodes, answer-nodes) in node space.
 """
 
 from collections.abc import Iterator
@@ -19,6 +20,10 @@ from mcgr.certify.menger import query_certificate
 from mcgr.data import load_dataset
 from mcgr.kg.graph_store import khop_subgraph
 
+# 2Wiki gold chains are length 2; radius 2 captures same-length alternative
+# paths (the conservative, gold-comparable horizon).
+_TWOWIKI_RADIUS = 2
+
 
 @dataclass(frozen=True)
 class CertifiedQuery:
@@ -29,18 +34,16 @@ class CertifiedQuery:
     subgraph_edges: int
 
 
-def _metaqa_provider(hops: int):
-    from mcgr.kg.metaqa_kg import metaqa_graph
-
-    graph = metaqa_graph()
-    return graph, hops
-
-
-# dataset-family -> callable(name) -> (full_graph, radius)
 def _resolve_kg(name: str) -> tuple[nx.Graph, int]:
     if name.startswith("metaqa-"):
+        from mcgr.kg.metaqa_kg import metaqa_graph
+
         hops = int(name.removeprefix("metaqa-").removesuffix("hop"))
-        return _metaqa_provider(hops)
+        return metaqa_graph(), hops
+    if name == "2wikimultihopqa":
+        from mcgr.kg.twowiki_kg import twowiki_graph
+
+        return twowiki_graph(), _TWOWIKI_RADIUS
     raise NotImplementedError(f"no Freebase-free KG provider for {name!r} yet (P2 builds the rest)")
 
 
@@ -74,6 +77,18 @@ def _worker_task(item: tuple[str, list[str], list[str]]) -> CertifiedQuery:
 
 
 def _iter_query_items(name: str, split: str, limit: int | None):
+    """Yield (qid, anchor-nodes, answer-nodes) in the KG's node space."""
+    if name == "2wikimultihopqa":
+        # nodes are Wikidata Q-ids; take anchors/answers from the id-annotated
+        # compositional/inference gold chains (the certifiable subset).
+        from mcgr.kg.twowiki_kg import seed_qids
+
+        _, queries = seed_qids(splits=(split,))
+        for i, (qid, _split, anchor, answer) in enumerate(queries):
+            if limit is not None and i >= limit:
+                return
+            yield (qid, [anchor], [answer])
+        return
     for i, r in enumerate(load_dataset(name, split)):
         if limit is not None and i >= limit:
             return

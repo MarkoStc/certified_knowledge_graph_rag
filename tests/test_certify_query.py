@@ -3,7 +3,7 @@
 import networkx as nx
 
 from mcgr.certify import anchor_set_path_count, query_certificate
-from mcgr.kg.graph_store import build_graph, khop_subgraph
+from mcgr.kg.graph_store import build_graph, khop_subgraph, prune_hubs
 
 
 def test_single_anchor_matches_pair_count() -> None:
@@ -51,3 +51,15 @@ def test_khop_subgraph_preserves_alternate_paths() -> None:
     g = build_graph([("a", "r", "b"), ("b", "r", "c"), ("a", "r", "d"), ("d", "r", "c")])
     sub = khop_subgraph(g, ["a"], radius=2)
     assert anchor_set_path_count(sub, ["a"], "c") == 2
+
+
+def test_prune_hubs_removes_shared_type_paths() -> None:
+    # a and c both point to a "human" hub H that also links b..e: without
+    # pruning, a-H-c is a spurious second path; pruning H removes it.
+    edges = [("a", "mother", "c")]  # the one true fact
+    edges += [(n, "instance_of", "H") for n in ("a", "b", "d", "e", "c")]
+    g = build_graph(edges)
+    assert anchor_set_path_count(g, ["a"], "c") == 2  # true edge + a-H-c
+    pruned, removed = prune_hubs(g, max_degree=3)
+    assert "H" in removed
+    assert anchor_set_path_count(pruned, ["a"], "c") == 1  # only the real fact

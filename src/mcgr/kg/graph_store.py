@@ -28,6 +28,28 @@ def build_graph(triples: list[tuple[str, str, str]]) -> nx.Graph:
     return g
 
 
+def prune_hubs(graph: nx.Graph, max_degree: int) -> tuple[nx.Graph, set[str]]:
+    """Remove nodes with degree > ``max_degree``, returning (pruned graph,
+    removed nodes).
+
+    In a Wikidata-derived KG the highest-degree nodes are type/attribute
+    values (``human``, ``male``, ``film``, a country) that hundreds or
+    thousands of entities point to. A path routed through such a hub —
+    ``entityA -> human -> entityB`` — is shared-type coincidence, not
+    independent supporting evidence, so counting it would inflate the
+    certificate. Dropping hubs enforces *evidential* (not merely structural)
+    independence (AGENTS.md P5 / §12). The cut is self-calibrating: type
+    hubs accumulate degree with dataset size while specific entities stay
+    small.
+    """
+    removed = {n for n, d in graph.degree() if d > max_degree}
+    if not removed:
+        return graph, removed
+    kept = graph.copy()
+    kept.remove_nodes_from(removed)
+    return kept, removed
+
+
 def khop_subgraph(graph: nx.Graph, sources: list[str], radius: int) -> nx.Graph:
     """Node-induced subgraph within ``radius`` hops of any source.
 
