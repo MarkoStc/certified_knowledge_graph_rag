@@ -77,6 +77,41 @@ def pick_sibling_wrong_answer(gold, rel, rel_objects, fallback_pool, seed_key):
     return "__no_such_entity__"
 
 
+def anonymize(question, anchor, evidence, attacked, gold, wrong):
+    """Rename every entity to an opaque token, consistently within this query.
+
+    Forces the reasoner to rely on the provided triples rather than
+    parametric memory of the real entities — a control for the memorization
+    confound. Relations are kept (they carry the reasoning structure)."""
+    entities: dict[str, str] = {}
+
+    def label(e: str) -> str:
+        if e not in entities:
+            entities[e] = f"Entity_{len(entities) + 1}"
+        return entities[e]
+
+    # anchor first so it maps deterministically; then evidence, then forged
+    label(anchor)
+    for s, _r, o in [*evidence, *attacked]:
+        label(s)
+        label(o)
+    for g in gold:
+        label(g)
+    label(wrong)
+
+    def remap(triples):
+        return [(entities[s], r, entities[o]) for s, r, o in triples]
+
+    q = question.replace(anchor, entities[anchor])
+    return (
+        q,
+        remap(evidence),
+        remap(attacked),
+        {entities[g] for g in gold},
+        entities[wrong],
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="metaqa-2hop")
@@ -87,6 +122,11 @@ def main() -> int:
     ap.add_argument("--radius", type=int, default=2)
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument(
+        "--anonymize",
+        action="store_true",
+        help="rename entities to opaque tokens (memorization control)",
+    )
     ap.add_argument("--out-dir", required=True, type=Path)
     args = ap.parse_args()
     seed_everything(args.seed)
@@ -129,7 +169,12 @@ def main() -> int:
         attacked = attack.apply(evidence, anchors[0], gold_chain, wrong)
         # shuffle so forged triples are not positionally distinguishable
         random.Random(f"shuf:{args.seed}:{r.qid}").shuffle(attacked)
-        prepared.append((r.qid, k, r.question, gold, wrong, evidence, attacked))
+        question = r.question
+        if args.anonymize:
+            question, evidence, attacked, gold, wrong = anonymize(
+                question, anchors[0], evidence, attacked, gold, wrong
+            )
+        prepared.append((r.qid, k, question, gold, wrong, evidence, attacked))
 
     log.info("prepared %d queries with evidence", len(prepared))
     reasoner = Reasoner(model_name=args.model).load()
@@ -176,6 +221,7 @@ def main() -> int:
         "dataset": args.dataset,
         "split": args.split,
         "model": args.model,
+        "anonymized": args.anonymize,
         "budget": args.budget,
         "seed": args.seed,
         "n": len(prepared),
