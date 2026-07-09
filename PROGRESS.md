@@ -180,3 +180,22 @@ Format per entry: date, phase, what was attempted, result, next.
   "modest accuracy cost" expectation: there was no cost here, a gain.
 - Next: P5 insertion certificate + threat_model.md; P10 selective prediction;
   P9 breadth (2Wiki + multi-seed); P3 baselines.
+
+## 2026-07-10 — P5 + P10 — insertion certificate & selective prediction
+
+- **P5 insertion certificate (contribution #2, was the big gap).**
+  certify/insertion.py: b_ins(a) = paths(a) - max competitor paths - 1 (the
+  support margin over the strongest type-consistent competitor). Formal
+  threat_model.md with named assumptions A1 (plurality grounding), A2 (one
+  path per insertion, conservative), A3 (explicit competitor set). Toy tests +
+  MetaQA 2-hop dev distribution (results/insertion_certificate.md, n=2000):
+  b_ins>=1 15.3% vs k>=1 16.8%; b_ins strictly < k for 22.1% (a real
+  competitor exists) — distinct from deletion, not a relabelling. Some queries
+  have negative b_ins (uncertifiable vs insertion despite deletion support).
+- **P10 selective prediction (contribution #4).** eval/selective.py
+  risk-coverage + AURC; reasoner.self_consistency. Under attack, MetaQA 2-hop
+  dev: AURC(k)=0.305 < AURC(self-consistency)=0.374 — k is the better
+  abstention signal (H3). 3-hop run in progress.
+- Now all four brief contributions have an implementation + a result:
+  deletion cert (P4), insertion cert (P5), retriever (P8), metric suite +
+  selective prediction (P10); plus the P7 GO gate.
