@@ -64,15 +64,38 @@ class Reasoner:
             messages, tokenize=False, add_generation_prompt=True
         )
 
-    def answer_batch(self, items: list[tuple[str, list[Triple]]]) -> list[str]:
-        """Answer a batch of (question, triples). Returns stripped strings."""
+    def _generate(self, items, *, do_sample, temperature):
         import torch
 
         if self._model is None:
             raise RuntimeError("call .load() first")
         prompts = [self._render(q, t) for q, t in items]
         tok = self._tokenizer(prompts, return_tensors="pt", padding=True).to("cuda")
+        kwargs = {"max_new_tokens": self.max_new_tokens, "do_sample": do_sample}
+        if do_sample:
+            kwargs["temperature"] = temperature
         with torch.no_grad():
-            out = self._model.generate(**tok, max_new_tokens=self.max_new_tokens, do_sample=False)
+            out = self._model.generate(**tok, **kwargs)
         gen = out[:, tok["input_ids"].shape[1] :]
         return [t.strip() for t in self._tokenizer.batch_decode(gen, skip_special_tokens=True)]
+
+    def answer_batch(self, items: list[tuple[str, list[Triple]]]) -> list[str]:
+        """Greedy answer for a batch of (question, triples)."""
+        return self._generate(items, do_sample=False, temperature=1.0)
+
+    def self_consistency(
+        self, items: list[tuple[str, list[Triple]]], n_samples: int = 5, temperature: float = 0.7
+    ) -> list[tuple[str, float]]:
+        """Sample ``n_samples`` answers per item; return (majority answer,
+        agreement fraction) — a self-consistency confidence signal."""
+        from collections import Counter
+
+        samples: list[list[str]] = [[] for _ in items]
+        for _ in range(n_samples):
+            for i, ans in enumerate(self._generate(items, do_sample=True, temperature=temperature)):
+                samples[i].append(ans.lower())
+        out = []
+        for s in samples:
+            top, count = Counter(s).most_common(1)[0]
+            out.append((top, count / len(s)))
+        return out
