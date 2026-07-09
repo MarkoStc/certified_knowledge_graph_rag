@@ -27,7 +27,11 @@ from mcgr.kg.graph_store import khop_subgraph
 from mcgr.kg.metaqa_kg import metaqa_graph
 from mcgr.logging_utils import RunLogger, get_logger
 from mcgr.models.reasoner import Reasoner
-from mcgr.retrieval.evidence import metaqa_pair_index, path_evidence
+from mcgr.retrieval.evidence import (
+    metaqa_pair_index,
+    metaqa_relation_objects,
+    path_evidence,
+)
 from mcgr.seeding import seed_everything
 
 log = get_logger("mcgr.p7")
@@ -53,10 +57,21 @@ def stratified_sample(records, k_by_qid, per_k, seed):
     return sample
 
 
-def pick_wrong_answer(gold: set[str], pool: list[str], seed_key: str) -> str:
+def final_relation(evidence, answer):
+    """The relation of the evidence hop(s) that land on the gold answer."""
+    rels = [r for _s, r, o in evidence if o == answer]
+    return rels[0] if rels else None
+
+
+def pick_sibling_wrong_answer(gold, rel, rel_objects, fallback_pool, seed_key):
+    """A type-consistent wrong answer: another object of the same relation
+    (a language for a language question), so the forged chain is coherent."""
     rng = random.Random(seed_key)
+    siblings = [o for o in rel_objects.get(rel, ()) if o not in gold] if rel else []
+    if siblings:
+        return rng.choice(siblings)
     for _ in range(10):
-        cand = rng.choice(pool)
+        cand = rng.choice(fallback_pool)
         if cand not in gold:
             return cand
     return "__no_such_entity__"
@@ -90,8 +105,11 @@ def main() -> int:
 
     graph = metaqa_graph()
     pair_index = metaqa_pair_index()
+    rel_objects = metaqa_relation_objects()
     answer_pool = sorted({a for r in records for a in r.answers})
-    attack = InsertionAttack(budget=args.budget, seed=args.seed)
+    # plausible real intermediates for forged chains (KB entities, not answers)
+    entity_pool = tuple(sorted({s for objs in pair_index.values() for s, _r, _o in objs})[:20000])
+    attack = InsertionAttack(budget=args.budget, seed=args.seed, entity_pool=entity_pool)
 
     # build per-query evidence, wrong answer, clean+attacked contexts
     prepared = []
@@ -103,9 +121,14 @@ def main() -> int:
         evidence = path_evidence(sub, anchors[0], answer, pair_index) if anchors else []
         if not evidence:
             continue
-        wrong = pick_wrong_answer(gold, answer_pool, f"{args.seed}:{r.qid}")
+        rel = final_relation(evidence, answer)
+        wrong = pick_sibling_wrong_answer(
+            gold, rel, rel_objects, answer_pool, f"{args.seed}:{r.qid}"
+        )
         gold_chain = evidence[:2]  # mirror the relation structure of one real path
         attacked = attack.apply(evidence, anchors[0], gold_chain, wrong)
+        # shuffle so forged triples are not positionally distinguishable
+        random.Random(f"shuf:{args.seed}:{r.qid}").shuffle(attacked)
         prepared.append((r.qid, k, r.question, gold, wrong, evidence, attacked))
 
     log.info("prepared %d queries with evidence", len(prepared))

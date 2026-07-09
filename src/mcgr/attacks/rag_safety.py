@@ -27,15 +27,19 @@ def _rng_index(seed: int, *parts: str, modulo: int) -> int:
 class InsertionAttack:
     budget: int
     seed: int = 0
+    # plausible real entity names used as forged intermediates; a realistic
+    # RAG-Safety attack does not use obviously-synthetic ids (those are
+    # trivially ignored by the reasoner). Empty -> fall back to synthetic tags.
+    entity_pool: tuple[str, ...] = ()
 
     def forge_chain(self, anchor: str, gold_chain: list[Triple], wrong_answer: str) -> list[Triple]:
         """Forge a competing chain anchor -> ... -> wrong_answer.
 
-        Mirrors the gold chain's relation sequence with fresh fake
-        intermediates so the forged path is structurally as plausible as the
-        real one. Uses up to ``budget`` triples: the first cover the chain to
+        Mirrors the gold chain's relation sequence with plausible
+        intermediates so the forged path is as convincing as a real one. Uses
+        up to ``budget`` triples: the first cover the chain to
         ``wrong_answer``; any remainder add corroborating duplicates of the
-        final (…, wrong_answer) hop from fake alternate intermediates, which
+        final (…, wrong_answer) hop from other plausible intermediates, which
         is what raises an insertion attack's strength.
         """
         if self.budget <= 0 or not gold_chain:
@@ -62,6 +66,9 @@ class InsertionAttack:
         return inserted
 
     def _fake_entity(self, anchor: str, wrong_answer: str, i: int) -> str:
+        idx = _rng_index(self.seed, anchor, wrong_answer, str(i), modulo=len(self.entity_pool) or 1)
+        if self.entity_pool:
+            return self.entity_pool[idx]
         tag = _rng_index(self.seed, anchor, wrong_answer, str(i), modulo=1_000_000)
         return f"__forged_{tag:06d}__"
 

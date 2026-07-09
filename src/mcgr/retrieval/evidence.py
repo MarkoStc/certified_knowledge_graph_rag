@@ -27,6 +27,18 @@ def metaqa_pair_index() -> dict[frozenset, list[Triple]]:
     return index
 
 
+@cache
+def metaqa_relation_objects() -> dict[str, tuple[str, ...]]:
+    """Map each relation to the tuple of its object entities (for picking a
+    type-consistent 'sibling' wrong answer under the same relation)."""
+    from mcgr.data.metaqa import load_kb
+
+    objs: dict[str, list[str]] = {}
+    for _s, r, o in load_kb():
+        objs.setdefault(r, []).append(o)
+    return {r: tuple(dict.fromkeys(v)) for r, v in objs.items()}
+
+
 def _edge_to_triples(u: str, v: str, pair_index: dict[frozenset, list[Triple]]) -> list[Triple]:
     return pair_index.get(frozenset((u, v)), [(u, "related_to", v)])
 
