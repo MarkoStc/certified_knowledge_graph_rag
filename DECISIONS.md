@@ -9,9 +9,16 @@
   0.12 vs 0.02-0.06). Both GO criteria met: certified queries are markedly
   more robust, and a non-trivial fraction admit k>=1 (MetaQA 2-hop 31%, 3-hop
   97%, 2Wiki 68%). Proceed on the GO path (certificate as the headline; the
-  P8 retriever is a booster, not the pivot). Caveat to keep testing: MetaQA
-  answers may be partly memorized by Qwen; confirm the effect on the
-  obscure-entity 2Wiki set and a second reasoner.
+  P8 retriever is a booster, not the pivot).
+  - **Memorization caveat RESOLVED (2026-07-09).** The k=0-vs-certified gap
+    holds across conditions (results/stage1_gate.md, all n=613, budget 8):
+    7B 4.5x (0.37 vs 0.08), 14B 7.5x (0.19 vs 0.03), **7B anonymized 5.6x
+    (0.42 vs 0.07)**. Under entity anonymization the model cannot use
+    parametric memory, yet the gradient is *steeper* and clean accuracy drops
+    most at k=0 (0.85->0.52) — memorization was dampening the effect, not
+    causing it. The certificate dependence is graph-structural. Still open for
+    P9: 2Wiki obscure-entity replication, ≥3 seeds with mean±std, full budget
+    sweep.
 
 - **2026-07-05 — Python 3.12 via uv.** System python3 is 3.6 (unusable);
   3.12.13 was already in the uv cache (no download). `requires-python >=3.12`.

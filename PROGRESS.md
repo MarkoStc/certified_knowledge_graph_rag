@@ -148,3 +148,18 @@ Format per entry: date, phase, what was attempted, result, next.
 - Next (GO path): broaden P7 (2Wiki obscure entities + a second reasoner,
   full budget sweep, seeds) for P9; then P8 certificate-maximizing retriever;
   P5 insertion certificate; P10 selective prediction.
+
+## 2026-07-09 (cont.) — P9 seed — P7 effect confirmed robust
+
+- Hardened the P7 GO against the memorization caveat with two controls, both
+  on GPU (results/stage1_gate.md, k=0 vs certified k>=1 flip, budget 8):
+    Qwen2.5-7B            0.37 vs 0.08  (4.5x)
+    Qwen2.5-14B           0.19 vs 0.03  (7.5x)  <- cross-model, effect holds
+    Qwen2.5-7B anonymized 0.42 vs 0.07  (5.6x)  <- no memorization possible
+- Anonymization (opaque entity tokens) makes the gradient *steeper* and drops
+  clean acc most at k=0 (0.85->0.52): memorization was masking, not creating,
+  the effect. The certificate dependence is graph-structural. Caveat resolved.
+- Pushed nothing to remote yet: this machine has no GitHub credentials
+  (no gh/SSH/token); Marko to push or supply a token.
+- Next: 2Wiki obscure-entity P7 (needs Wikidata labels for readable triples);
+  multi-seed for mean±std; then P8 retriever.
