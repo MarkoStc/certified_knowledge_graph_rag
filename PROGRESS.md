@@ -193,9 +193,11 @@ Format per entry: date, phase, what was attempted, result, next.
   competitor exists) — distinct from deletion, not a relabelling. Some queries
   have negative b_ins (uncertifiable vs insertion despite deletion support).
 - **P10 selective prediction (contribution #4).** eval/selective.py
-  risk-coverage + AURC; reasoner.self_consistency. Under attack, MetaQA 2-hop
-  dev: AURC(k)=0.305 < AURC(self-consistency)=0.374 — k is the better
-  abstention signal (H3). 3-hop run in progress.
+  risk-coverage + AURC; reasoner.self_consistency. Under attack (budget 8),
+  k beats self-consistency as an abstention signal on both splits
+  (results/selective_prediction.md): 2-hop AURC(k)=0.305 vs 0.374;
+  3-hop AURC(k)=0.236 vs 0.277. Self-consistency is also too coarse to abstain
+  finely (most queries tie at full agreement) — extra point for k. H3 holds.
 - Now all four brief contributions have an implementation + a result:
   deletion cert (P4), insertion cert (P5), retriever (P8), metric suite +
   selective prediction (P10); plus the P7 GO gate.

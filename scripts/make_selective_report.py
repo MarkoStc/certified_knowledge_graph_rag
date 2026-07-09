@@ -66,9 +66,16 @@ def main() -> int:
         for cov in COV_POINTS:
             xk = risk_at(rk, cov)
             xc = risk_at(rc, cov)
-            xks = f"{xk:.2f}" if xk is not None else "n/a"
-            xcs = f"{xc:.2f}" if xc is not None else "n/a"
+            xks = f"{xk:.2f}" if xk is not None else "n/a*"
+            xcs = f"{xc:.2f}" if xc is not None else "n/a*"
             lines.append(f"| {cov:.0%} | {xks} | {xcs} |")
+        lines.append("")
+        lines.append(
+            "\\* n/a = the signal is too coarse to operate at that coverage "
+            "(large tie-groups). Self-consistency lumps most queries into "
+            "'fully agree', so it cannot abstain finely — itself a point in "
+            "`k`'s favour; the AURC above integrates the full curve regardless."
+        )
         lines.append("")
 
     lines += [
