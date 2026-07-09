@@ -1,5 +1,18 @@
 # DECISIONS.md — non-obvious choices + rationale
 
+- **2026-07-09 — P7 GATE DECISION: GO.** The deletion certificate `k`
+  predicts empirical robustness to the RAG-Safety insertion attack. On MetaQA
+  2-hop (Qwen2.5-7B, results/stage1_gate.md), at attack budget 8 the k=0 flip
+  rate is **0.37** vs **~0.07-0.10** for certified (k>=1) queries — a >4x gap,
+  monotonic in `k`, with uniformly high clean accuracy (0.85-0.96) so it is
+  not a can't-answer artifact. The gap scales with attack strength (budget 2:
+  0.12 vs 0.02-0.06). Both GO criteria met: certified queries are markedly
+  more robust, and a non-trivial fraction admit k>=1 (MetaQA 2-hop 31%, 3-hop
+  97%, 2Wiki 68%). Proceed on the GO path (certificate as the headline; the
+  P8 retriever is a booster, not the pivot). Caveat to keep testing: MetaQA
+  answers may be partly memorized by Qwen; confirm the effect on the
+  obscure-entity 2Wiki set and a second reasoner.
+
 - **2026-07-05 — Python 3.12 via uv.** System python3 is 3.6 (unusable);
   3.12.13 was already in the uv cache (no download). `requires-python >=3.12`.
 - **2026-07-05 — Package named `mcgr`, repo keeps its GitHub name.** The

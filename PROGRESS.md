@@ -126,3 +126,25 @@ Format per entry: date, phase, what was attempted, result, next.
 - Next: P6 attacks (RAG-Safety triple insertion first) + P7 gate — correlate
   certified k with empirical robustness under attack. Also 2Wiki test lacks
   answer_id so isn't certifiable; train is cached for P8 retriever work.
+
+## 2026-07-09 — P6 + P7 — attack, reasoner, and the GO gate
+
+- Retired the top technical risk: Qwen2.5-7B runs on GH200 (torch
+  2.13+cu130, aarch64 CUDA). Fixed a batched-decode left-padding bug; smoke
+  test answers correctly. Added optional `[llm]` extra (torch/transformers);
+  required-environments pins aarch64 so torch resolves the sbsa CUDA wheel.
+  NOTE: use `.venv/bin/python` or `uv run --extra llm` consistently — mixing
+  base and `--extra llm` `uv run` calls thrashes the env (slow).
+- Built P6: RAG-Safety insertion attack (attacks/rag_safety.py), KG reasoner
+  (models/reasoner.py), directed-evidence retrieval (retrieval/evidence.py).
+- P7 experiment iteration (honest): first run had too weak an attack (fake
+  ids ignored, even k=0 flipped ~6%). Fixed to a faithful attack —
+  type-consistent sibling wrong-answers, real intermediates, shuffled context.
+- **P7 GATE = GO.** MetaQA 2-hop, Qwen2.5-7B (results/stage1_gate.md):
+    budget 8: k=0 flip 0.37 vs k>=1 ~0.07-0.10 (>4x, monotonic)
+    budget 2: k=0 flip 0.12 vs k>=1 0.02-0.06
+  Clean acc 0.85-0.96 across bins. Certificate predicts robustness; gap
+  scales with attack strength. Decision recorded in DECISIONS.md.
+- Next (GO path): broaden P7 (2Wiki obscure entities + a second reasoner,
+  full budget sweep, seeds) for P9; then P8 certificate-maximizing retriever;
+  P5 insertion certificate; P10 selective prediction.
