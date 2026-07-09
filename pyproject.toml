@@ -10,6 +10,15 @@ dependencies = [
     "pyyaml>=6.0.3",
 ]
 
+[project.optional-dependencies]
+# LLM inference (P6+): heavy CUDA stack, kept out of the base env so the
+# CPU-only certificate work installs fast. Install with: uv sync --extra llm
+llm = [
+    "torch>=2.6",
+    "transformers>=4.48",
+    "accelerate>=1.2",
+]
+
 [project.scripts]
 mcgr-demo = "mcgr.cli:main"
 
@@ -18,6 +27,11 @@ dev = [
     "ruff>=0.14",
     "pytest>=8",
 ]
+
+# GH200 is aarch64 + CUDA (Hopper sm_90). Default-PyPI torch now ships CUDA
+# aarch64 (sbsa) wheels; pin the resolver to that target so it picks them.
+[tool.uv]
+required-environments = ["sys_platform == 'linux' and platform_machine == 'aarch64'"]
 
 [build-system]
 requires = ["uv_build>=0.11,<0.12"]
