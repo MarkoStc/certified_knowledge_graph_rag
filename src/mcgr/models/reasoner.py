@@ -45,8 +45,13 @@ class Reasoner:
 
         path = str(models_root() / self.model_name)
         self._tokenizer = AutoTokenizer.from_pretrained(path)
+        # decoder-only batched generation requires left padding, and a pad
+        # token (Qwen leaves it unset) — otherwise short prompts decode empty
+        self._tokenizer.padding_side = "left"
+        if self._tokenizer.pad_token is None:
+            self._tokenizer.pad_token = self._tokenizer.eos_token
         self._model = AutoModelForCausalLM.from_pretrained(
-            path, torch_dtype=torch.bfloat16, device_map="cuda"
+            path, dtype=torch.bfloat16, device_map="cuda"
         )
         return self
 
