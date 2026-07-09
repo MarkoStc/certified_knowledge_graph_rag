@@ -39,8 +39,9 @@ def main() -> int:
         "  anchor->answer paths, retrieving certificate k = (#paths) - 1.",
         "",
         "`flip rate` is over clean-correct queries under attack (lower = more",
-        "robust). The claim: the agentic policy raises certified coverage and",
-        "robustness at modest clean-accuracy cost.",
+        "robust). Claim: the agentic policy raises certified coverage and",
+        "robustness without a clean-accuracy cost (in fact a gain here, since",
+        "one path is often an ambiguous shortcut on harder queries).",
         "",
     ]
     for s in summaries:
@@ -59,18 +60,24 @@ def main() -> int:
                 f"{fmt(v['clean_acc'], pct=True)} | {fmt(v['flip_rate'])} |"
             )
         sb, ag = pol["single_best"], pol["agentic"]
-        cov_lift = ag["certified_coverage"] - sb["certified_coverage"]
-        acc_cost = sb["clean_acc"] - ag["clean_acc"]
-        flip_delta = (
-            (sb["flip_rate"] - ag["flip_rate"])
+        # deltas as agentic - baseline: positive coverage/acc = better;
+        # negative flip = more robust
+        cov_d = (ag["certified_coverage"] - sb["certified_coverage"]) * 100
+        acc_d = (ag["clean_acc"] - sb["clean_acc"]) * 100
+        flip_d = (
+            ag["flip_rate"] - sb["flip_rate"]
             if (sb["flip_rate"] is not None and ag["flip_rate"] is not None)
             else None
         )
+        flip_txt = (
+            f"attack flip rate {flip_d:+.2f} (negative = more robust)."
+            if flip_d is not None
+            else ""
+        )
         lines += [
             "",
-            f"Agentic vs baseline: certified coverage +{cov_lift:.0%}, "
-            f"clean-accuracy cost {acc_cost:+.0%}, "
-            + (f"flip rate {flip_delta:+.2f} (lower is better)." if flip_delta is not None else ""),
+            f"Agentic - baseline: certified coverage {cov_d:+.0f} pp, "
+            f"clean accuracy {acc_d:+.0f} pp, " + flip_txt,
             "",
         ]
 

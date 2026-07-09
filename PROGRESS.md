@@ -163,3 +163,20 @@ Format per entry: date, phase, what was attempted, result, next.
   (no gh/SSH/token); Marko to push or supply a token.
 - Next: 2Wiki obscure-entity P7 (needs Wikidata labels for readable triples);
   multi-seed for mean±std; then P8 retriever.
+
+## 2026-07-09 (cont.) — P8 — certificate-maximizing retriever
+
+- Pushed main to GitHub (Marko supplied a token; nothing stored locally).
+- retrieval/agentic.py: single-best-chain (one path, k=0) vs
+  certificate-maximizing (edge-disjoint paths, k=n_paths-1); ablation runner
+  measures mean k, certified coverage, clean acc, and attack flip rate.
+- **P8 result** (MetaQA dev, Qwen2.5-7B, budget 8, results/retriever_ablation.md):
+    2-hop: coverage 0%->16%, clean acc 83%->88%, flip 0.29->0.27
+    3-hop: coverage 0%->82%, clean acc 32%->78%, flip 0.18->0.035
+  The agentic retriever converts uncertified (k=0) answers into certified,
+  attack-robust ones — and with NO clean-accuracy cost (a gain, since one
+  path is often an ambiguous shortcut on 3-hop). This is the second core
+  contribution ("making answers certifiable"). Honest note vs the brief's
+  "modest accuracy cost" expectation: there was no cost here, a gain.
+- Next: P5 insertion certificate + threat_model.md; P10 selective prediction;
+  P9 breadth (2Wiki + multi-seed); P3 baselines.
