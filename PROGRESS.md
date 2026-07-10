@@ -212,3 +212,20 @@ Format per entry: date, phase, what was attempted, result, next.
   is single-seed noise (multi-seed pins budget 8).
 - Next: 2Wiki obscure-entity P7 (needs Wikidata labels); P3 baselines; P11
   text-KG; P12 consolidation into results/FINAL/.
+
+## 2026-07-10 (cont.) — P9 — 2Wiki cross-dataset P7 generalization
+
+- Built Wikidata label fetcher + 2Wiki P7 gate (run_p7_gate_2wiki.py);
+  hit and fixed two issues: inline label fetch on GPU was too slow (split
+  into a login-node --prefetch-labels pass, cache warm -> fast GPU run) and
+  a __none__ sentinel crashed the label API (skip no-competitor queries).
+  2Wiki long dense contexts also need >30min jobs (used debug --time 80min).
+- **2Wiki result** (dev, Qwen2.5-7B, stage1_gate.md), k=0 vs certified flip:
+    budget 2: 0.054 vs 0.002 (27x)
+    budget 8: 0.189 vs 0.012 (16x)
+  The certificate-robustness gradient holds on obscure real entities — the
+  P7 GO generalizes beyond MetaQA. Honest confound: 2Wiki clean acc falls
+  with k (0.93->0.53) because high k = dense subgraph = long noisy context
+  (retrieval effect, not certificate); flip rate among clean-correct is the
+  clean signal. Absolute flips lower than MetaQA (long obscure answer strings).
+- Next: P3 baselines; P11 text-KG; P12 consolidation into results/FINAL/.

@@ -101,3 +101,26 @@ Flip rate (attacked, over clean-correct), mean ± std across seeds:
 
 The k=0-vs-certified separation is stable across seeds, not a single-seed
 artifact (AGENTS.md §6 requires >=3 seeds with mean ± std).
+
+## Cross-dataset generalization — 2WikiMultiHopQA (P9)
+
+The gate replicated on the 2Wiki Wikidata KG (real, obscure entities — 18th-c.
+nobility, Hellenistic kings — a memorization control by construction; triples
+rendered from Wikidata labels). Qwen2.5-7B, flip rate over clean-correct:
+
+| budget | k=0 flip | certified k>=1 flip | gap |
+|---:|---:|---:|---:|
+| 2 | 0.054 | 0.002 | 27x |
+| 8 | 0.189 | 0.012 | 16x |
+
+The certificate-robustness gradient holds on a second, real-world dataset, so
+the P7 GO is not a MetaQA artifact. Absolute flip rates are lower than MetaQA
+(long obscure answer strings are harder for the attack to make the model
+emit verbatim), but the k=0-vs-certified separation is large and monotonic.
+
+**Honest confound.** 2Wiki clean accuracy *falls* with k (budget 8: 0.93 at
+k=0 to 0.53 at k>=6). High k here means a dense Wikidata subgraph, hence a
+long, noisy retrieved context — a retrieval/context-length effect, not a
+certificate one. The robustness signal (flip rate among clean-correct) is
+unaffected by it; a length-controlled retriever (P8-style) would remove the
+confound and is the right follow-up.
