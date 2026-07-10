@@ -94,17 +94,20 @@ def main() -> int:
         rels = [p for _s, p, o in ev if o == answer]
         rel = rels[0] if rels else None
         sibs = [o for o in rel_objects.get(rel, ()) if o != answer] if rel else []
-        wrong = rng.choice(sibs) if sibs else "__none__"
+        if not sibs:
+            continue  # no type-consistent competitor -> no meaningful attack
+        wrong = rng.choice(sibs)
         atk = attack.apply(ev, anchor, ev[:2], wrong)
         random.Random(f"shuf:{qid}").shuffle(atk)
         prepared.append((qid, k, anchor, answer, wrong, ev, atk))
 
-    # fetch labels for every Q-id / P-id we will render
+    # fetch labels for every Q-id / P-id we will render (valid ids only)
     ids = set()
     for _qid, _k, _a, gold, wrong, ev, atk in prepared:
         ids.update({gold, wrong})
         for s, p, o in [*ev, *atk]:
             ids.update({s, p, o})
+    ids = {i for i in ids if i and i[0] in "QP" and i[1:].isdigit()}
     labels = get_labels(sorted(ids))
     if args.prefetch_labels:
         print(f"prefetched {len(labels)} labels for {len(prepared)} queries; exiting")
