@@ -5,6 +5,7 @@ description = "Menger-Certified Graph-RAG: provable per-answer robustness for mu
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "matplotlib>=3.9",
     "networkx>=3.4",
     "pyarrow>=24.0.0",
     "pyyaml>=6.0.3",
