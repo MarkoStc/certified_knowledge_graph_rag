@@ -89,3 +89,15 @@ GO if certified (k>=1) queries are markedly more robust than k=0 and a
 non-trivial fraction of queries admit k>=1 (certificate_distribution.md:
 MetaQA 2-hop 31%, 3-hop 97%, 2Wiki 68%). Otherwise PIVOT to the
 certificate-maximizing retriever (P8). Decision recorded in DECISIONS.md.
+
+## Multi-seed robustness (seeds [0, 1, 2], Qwen2.5-7B-Instruct, budget 8)
+
+Flip rate (attacked, over clean-correct), mean ± std across seeds:
+
+| bin | flip rate |
+|---|---:|
+| k=0 | 0.324 ± 0.034 |
+| certified k>=1 | 0.088 ± 0.007 |
+
+The k=0-vs-certified separation is stable across seeds, not a single-seed
+artifact (AGENTS.md §6 requires >=3 seeds with mean ± std).

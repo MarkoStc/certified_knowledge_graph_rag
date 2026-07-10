@@ -201,3 +201,9 @@ Format per entry: date, phase, what was attempted, result, next.
 - Now all four brief contributions have an implementation + a result:
   deletion cert (P4), insertion cert (P5), retriever (P8), metric suite +
   selective prediction (P10); plus the P7 GO gate.
+- **P9 multi-seed (DoD >=3 seeds, mean±std).** P7 gate seeds 0/1/2 (7B,
+  budget 8), appended to results/stage1_gate.md: k=0 flip 0.324 ± 0.034 vs
+  certified k>=1 0.088 ± 0.007 — the ~3.7x separation is stable with tight
+  variance, not a single-seed artifact. make_multiseed_report.py aggregates.
+- Next: 2Wiki obscure-entity P7 (needs Wikidata labels); P3 baselines; P11
+  text-KG; P12 consolidation into results/FINAL/.
