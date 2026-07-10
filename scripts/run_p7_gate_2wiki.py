@@ -47,6 +47,11 @@ def main() -> int:
     ap.add_argument("--model", default="Qwen2.5-7B-Instruct")
     ap.add_argument("--batch-size", type=int, default=48)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument(
+        "--prefetch-labels",
+        action="store_true",
+        help="fetch+cache labels then exit (no GPU) — run this first off-GPU",
+    )
     ap.add_argument("--out-dir", required=True, type=Path)
     args = ap.parse_args()
     seed_everything(args.seed)
@@ -101,6 +106,9 @@ def main() -> int:
         for s, p, o in [*ev, *atk]:
             ids.update({s, p, o})
     labels = get_labels(sorted(ids))
+    if args.prefetch_labels:
+        print(f"prefetched {len(labels)} labels for {len(prepared)} queries; exiting")
+        return 0
 
     def render(triples):
         return [(labels.get(s, s), labels.get(p, p), labels.get(o, o)) for s, p, o in triples]
