@@ -59,6 +59,13 @@ adds role-aware hub pruning. Figures: `results/FINAL/figures/` via
    2-hop 0.305 vs 0.374, 3-hop 0.236 vs 0.277. →
    `results/selective_prediction.md`; `scripts/run_selective_prediction.py`.
 
+10. **Generalizes to a text-constructed KG (P11).** Certificates compute
+    end-to-end on per-question co-mention KGs built from HotpotQA Wikipedia
+    context (no curated KB); 80.5% supported, 18.9% certified (k≥1) —
+    non-trivial redundancy from text alone, lower than dense curated KBs as
+    expected. → `results/text_kg_certificate.md`;
+    `scripts/compute_text_kg_certificates.py`, `src/mcgr/kg/text_kg.py`.
+
 ## Claim ↔ evidence map
 
 | Brief item | Established by | Evidence |
@@ -92,7 +99,8 @@ uv run python scripts/make_figures.py
 ## Not yet done (full §6 matrix)
 
 - **Datasets**: WebQSP, CWQ (need the Freebase endpoint — `context/BLOCKED.md`);
-  P11 text-KG generalization (HotpotQA, MuSiQue).
+  P11 text-KG done on HotpotQA (finding 10); MuSiQue text-KG + the text-KG
+  reasoning/attack experiments remain.
 - **Models**: Llama-3.1-8B (gated — token + license, `context/BLOCKED.md`).
 - **Baselines**: P3 RoG / SubgraphRAG / GraphRAG reproductions.
 - **Scale**: reasoning experiments are single-model / single-split samples;

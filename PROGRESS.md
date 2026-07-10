@@ -229,3 +229,17 @@ Format per entry: date, phase, what was attempted, result, next.
   (retrieval effect, not certificate); flip rate among clean-correct is the
   clean signal. Absolute flips lower than MetaQA (long obscure answer strings).
 - Next: P3 baselines; P11 text-KG; P12 consolidation into results/FINAL/.
+
+## 2026-07-10 (cont.) — P11 — text-constructed KG (HotpotQA)
+
+- Tried spaCy for NER but its dep tree is broken on this env (missing click);
+  removed it and used a dependency-free extractor: per-question co-mention KG
+  from HotpotQA Wikipedia titles + answer (src/mcgr/kg/text_kg.py).
+- **P11 result** (results/text_kg_certificate.md, n=3000 bridge questions):
+  certificates compute end-to-end on text-constructed KGs; 80.5% supported,
+  18.9% certified (k>=1) — non-trivial redundancy from text alone, lower than
+  dense curated KBs as expected. Generalization established. matplotlib added
+  (P12 figures); base `uv sync` drops torch — use `uv sync --extra llm` for GPU.
+- results/FINAL/RESULTS.md updated to finding 10.
+- Remaining: MuSiQue text-KG; text-KG reasoning/attack experiments; P3
+  baselines; full-scale matrix; gated WebQSP/CWQ + Llama.
