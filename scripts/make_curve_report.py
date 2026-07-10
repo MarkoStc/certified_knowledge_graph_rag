@@ -63,10 +63,11 @@ def main() -> int:
     lines += [
         "",
         "At budget 0 (no attack) both are ~0 (a sanity check). As the adversary",
-        "spends more inserted triples, the k=0 flip rate climbs steeply while",
-        "certified queries stay low — the widening gap is the certificate's",
-        "empirical protection, and its plateau marks where even certified support",
-        "is eventually overwhelmed (informing the insertion budget of P5).",
+        "spends more inserted triples, the k=0 flip rate climbs steeply (to ~0.49",
+        "at budget 20) while certified queries stay low (~0.10) — the widening gap",
+        "is the certificate's empirical protection. Small non-monotonicities",
+        "(e.g. budget 8 vs 10) are finite-sample noise at single seed (~60 k=0",
+        "queries per point); the multi-seed point in stage1_gate.md pins budget 8.",
         "",
     ]
     OUT.write_text("\n".join(lines))

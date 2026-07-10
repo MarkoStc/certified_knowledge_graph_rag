@@ -205,5 +205,10 @@ Format per entry: date, phase, what was attempted, result, next.
   budget 8), appended to results/stage1_gate.md: k=0 flip 0.324 ± 0.034 vs
   certified k>=1 0.088 ± 0.007 — the ~3.7x separation is stable with tight
   variance, not a single-seed artifact. make_multiseed_report.py aggregates.
+- **§7 certified-vs-empirical curve** (results/certified_vs_empirical.md,
+  budgets 0,1,2,5,8,10,20, 7B 2-hop): k=0 flip 0.00->0.08->0.12->0.25->0.37->
+  0.31->0.49 vs certified 0.00->...->0.10. Budget 0 = 0/0 sanity check; gap
+  widens with attack strength to ~5x at budget 20. Minor b8/b10 non-monotonicity
+  is single-seed noise (multi-seed pins budget 8).
 - Next: 2Wiki obscure-entity P7 (needs Wikidata labels); P3 baselines; P11
   text-KG; P12 consolidation into results/FINAL/.
