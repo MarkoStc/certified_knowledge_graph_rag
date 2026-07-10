@@ -84,3 +84,22 @@ def twowiki_graph_and_hubs(max_degree: int = HUB_MAX_DEGREE) -> tuple[nx.Graph, 
 def twowiki_graph(max_degree: int = HUB_MAX_DEGREE) -> nx.Graph:
     """The pruned 2Wiki Wikidata KG (transit graph)."""
     return twowiki_graph_and_hubs(max_degree)[0]
+
+
+@cache
+def twowiki_pair_index() -> dict:
+    """Map each unordered Q-id pair to its directed (s, pid, o) triple(s)."""
+    index: dict = {}
+    for s, p, o in load_triples():
+        index.setdefault(frozenset((s, o)), []).append((s, p, o))
+    return index
+
+
+@cache
+def twowiki_relation_objects() -> dict:
+    """Map each property (P-id) to the tuple of its object Q-ids, for picking
+    a type-consistent sibling wrong answer under the same relation."""
+    objs: dict = {}
+    for _s, p, o in load_triples():
+        objs.setdefault(p, []).append(o)
+    return {p: tuple(dict.fromkeys(v)) for p, v in objs.items()}

@@ -34,8 +34,8 @@ def _batch_path(batch_key: str) -> Path:
     return cache_dir() / f"{batch_key}.json"
 
 
-def _fetch_batch(ids: list[str], *, retries: int = 8, pause: float = 1.0) -> dict:
-    """Fetch claims for up to 50 ids, returning the ``entities`` mapping.
+def _fetch_batch(ids: list[str], *, props: str = "claims", retries: int = 8, pause: float = 1.0):
+    """Fetch ``props`` for up to 50 ids, returning the ``entities`` mapping.
 
     Handles Wikidata rate limiting: honours a ``Retry-After`` header on HTTP
     429/503 and otherwise backs off exponentially (capped). ``maxlag`` asks
@@ -45,7 +45,7 @@ def _fetch_batch(ids: list[str], *, retries: int = 8, pause: float = 1.0) -> dic
         {
             "action": "wbgetentities",
             "ids": "|".join(ids),
-            "props": "claims",
+            "props": props,
             "format": "json",
             "maxlag": "5",
         }
@@ -95,6 +95,28 @@ def get_entities(ids: list[str], *, use_cache: bool = True, polite_pause: float 
         out.update(entities)
         time.sleep(polite_pause)
     return out
+
+
+def get_labels(ids: list[str], *, lang: str = "en", use_cache: bool = True) -> dict[str, str]:
+    """English labels for Q-ids and/or P-ids (cached per batch). Missing
+    labels fall back to the id itself so callers always get a string."""
+    labels: dict[str, str] = {}
+    unique = list(dict.fromkeys(ids))
+    for i in range(0, len(unique), BATCH):
+        chunk = unique[i : i + BATCH]
+        key = f"labels_{chunk[0]}_{len(chunk)}_{hash(tuple(chunk)) & 0xFFFFFFFF:08x}"
+        path = _batch_path(key)
+        if use_cache and path.exists():
+            labels.update(json.loads(path.read_text()))
+            continue
+        entities = _fetch_batch(chunk, props="labels")
+        batch = {
+            qid: e.get("labels", {}).get(lang, {}).get("value", qid) for qid, e in entities.items()
+        }
+        path.write_text(json.dumps(batch))
+        labels.update(batch)
+        time.sleep(0.1)
+    return {qid: labels.get(qid, qid) for qid in unique}
 
 
 def entity_triples(entity: dict) -> list[tuple[str, str, str]]:
