@@ -243,3 +243,14 @@ Format per entry: date, phase, what was attempted, result, next.
 - results/FINAL/RESULTS.md updated to finding 10.
 - Remaining: MuSiQue text-KG; text-KG reasoning/attack experiments; P3
   baselines; full-scale matrix; gated WebQSP/CWQ + Llama.
+
+## 2026-07-11 — Llama-3.1-8B unblocked (HF token + license from Marko)
+
+- check_prereqs now 15/16 (only Freebase left). Downloaded Llama-3.1-8B
+  (15G); verified it loads+generates on GH200 (Alice/Greek).
+- **Third reasoner in the P7 cross-model table** (stage1_gate.md, budget 8,
+  k=0 vs certified): Qwen2.5-7B 0.37/0.08, Qwen2.5-14B 0.19/0.03,
+  Llama-3.1-8B 0.23/0.09. Gradient holds on all three (Llama is a weaker
+  reasoner — lower clean acc — but k=0 still flips most). make_figures.py
+  cross_condition adds Llama; RESULTS finding 3 updated.
+- Next unblocked: Llama across P8/P10; still gated: Freebase (WebQSP/CWQ).

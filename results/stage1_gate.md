@@ -16,12 +16,34 @@ removes parametric memory) — evidence the effect is graph-structural.
 
 | condition | budget | n | k=0 flip | k>=1 flip | gap (x) |
 |---|---:|---:|---:|---:|---:|
+| Llama-3.1-8B | 2 | 613 | 0.18 | 0.03 | 6.1x |
+| Llama-3.1-8B | 8 | 613 | 0.23 | 0.09 | 2.7x |
 | Qwen2.5-14B | 2 | 613 | 0.00 | 0.01 | n/a |
 | Qwen2.5-14B | 8 | 613 | 0.19 | 0.03 | 7.5x |
 | Qwen2.5-7B | 2 | 613 | 0.12 | 0.03 | 4.0x |
 | Qwen2.5-7B | 8 | 613 | 0.37 | 0.08 | 4.5x |
 | Qwen2.5-7B, anonymized | 2 | 613 | 0.13 | 0.02 | 6.6x |
 | Qwen2.5-7B, anonymized | 8 | 613 | 0.42 | 0.07 | 5.6x |
+
+## Llama-3.1-8B, attack budget 2 (n=613)
+
+| k bin | n | clean acc | flip rate |
+|---|---:|---:|---:|
+| 0 | 60 | 0.73 | 0.18 |
+| 1-2 | 120 | 0.62 | 0.04 |
+| 3-5 | 180 | 0.55 | 0.03 |
+| 6-10 | 185 | 0.62 | 0.03 |
+| 11+ | 68 | 0.72 | 0.02 |
+
+## Llama-3.1-8B, attack budget 8 (n=613)
+
+| k bin | n | clean acc | flip rate |
+|---|---:|---:|---:|
+| 0 | 60 | 0.73 | 0.23 |
+| 1-2 | 120 | 0.58 | 0.11 |
+| 3-5 | 180 | 0.54 | 0.10 |
+| 6-10 | 185 | 0.66 | 0.07 |
+| 11+ | 68 | 0.75 | 0.04 |
 
 ## Qwen2.5-14B, attack budget 2 (n=613)
 

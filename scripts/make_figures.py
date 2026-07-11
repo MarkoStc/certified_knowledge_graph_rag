@@ -95,6 +95,7 @@ def fig_cross_condition():
     conds = [
         ("MetaQA 7B", "p7/metaqa2_dev_b8"),
         ("MetaQA 14B", "p7/metaqa2_dev_14b_b8"),
+        ("MetaQA\nLlama-8B", "p7/metaqa2_dev_llama_b8"),
         ("MetaQA 7B\nanon", "p7/metaqa2_dev_anon_b8"),
         ("2Wiki 7B", "p7/2wiki_dev_b8"),
     ]

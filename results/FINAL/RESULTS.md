@@ -23,11 +23,12 @@ adds role-aware hub pruning. Figures: `results/FINAL/figures/` via
    MetaQA 2-hop, budget 8: k=0 flip 0.37 vs certified 0.09. → `stage1_gate.md`;
    `scripts/run_p7_gate.py`.
 
-3. **The effect is graph-structural, not memorization.** Holds cross-model
-   (14B: 0.19 vs 0.03) and under entity anonymization (0.42 vs 0.07, steeper;
-   clean acc drops most at k=0). → `stage1_gate.md` "Robustness of the effect",
-   fig `cross_condition.png`; `run_p7_gate.py --anonymize`,
-   `--model Qwen2.5-14B-Instruct`.
+3. **The effect is graph-structural, not memorization.** Holds across three
+   reasoners (budget 8 k=0 vs certified: Qwen2.5-7B 0.37/0.08, 14B 0.19/0.03,
+   Llama-3.1-8B 0.23/0.09) and under entity anonymization (0.42 vs 0.07,
+   steeper; clean acc drops most at k=0). → `stage1_gate.md` "Robustness of
+   the effect", fig `cross_condition.png`; `run_p7_gate.py --anonymize`,
+   `--model {Qwen2.5-14B-Instruct,Llama-3.1-8B-Instruct}`.
 
 4. **Stable across seeds.** 3 seeds, budget 8: k=0 flip 0.324 ± 0.034 vs
    certified 0.088 ± 0.007. → `stage1_gate.md` "Multi-seed";
