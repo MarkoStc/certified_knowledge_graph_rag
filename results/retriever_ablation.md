@@ -31,6 +31,15 @@ Agentic - baseline: certified coverage +16 pp, clean accuracy +4 pp, attack flip
 
 Agentic - baseline: certified coverage +82 pp, clean accuracy +46 pp, attack flip rate -0.14 (negative = more robust).
 
+## metaqa-3hop dev (model Llama-3.1-8B-Instruct)
+
+| policy | n | mean retrieved k | certified coverage | clean acc | flip rate |
+|---|---:|---:|---:|---:|---:|
+| single-best-chain (baseline) | 400 | 0.00 | 0% | 41% | 0.06 |
+| certificate-maximizing | 400 | 3.71 | 82% | 89% | 0.03 |
+
+Agentic - baseline: certified coverage +82 pp, clean accuracy +48 pp, attack flip rate -0.04 (negative = more robust).
+
 ## Takeaway
 
 The single-best-chain retriever leaves every answer uncertified (k=0);
